@@ -156,14 +156,14 @@ export default async function DashboardPage() {
             <p className="text-zinc-500 text-sm mt-1">Acciones recientes del equipo.</p>
           </div>
           <div className="p-6">
-            <div className="space-y-6 relative before:absolute before:inset-0 before:ml-[11px] before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-yellow-500 before:via-[#333] before:to-transparent">
+            <div className="space-y-6 relative before:absolute before:inset-0 before:ml-[11px] before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-px before:bg-[#333]">
               {recentActivity.length === 0 ? (
                 <p className="text-zinc-500 text-center py-4">No hay actividad registrada.</p>
               ) : (
                 recentActivity.map((log) => (
                   <div key={log.id} className="relative flex items-start gap-4">
-                    <div className="absolute left-0 w-6 h-6 bg-[#111] border-2 border-yellow-500 rounded-full z-10 flex items-center justify-center mt-0.5">
-                      <div className="w-2 h-2 bg-yellow-500 rounded-full" />
+                    <div className="absolute left-0 w-6 h-6 bg-black border border-[#444] rounded-full z-10 flex items-center justify-center mt-0.5">
+                      <div className="w-2 h-2 bg-zinc-600 rounded-full" />
                     </div>
                     <div className="ml-10">
                       <p className="text-sm font-semibold text-white">

@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Users, Plus, Search } from "lucide-react";
+import { Users, Plus, Search, Edit, Trash2 } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -38,17 +38,51 @@ export default function CustomerClient({ customers }: { customers: any[] }) {
     direccion: "",
   });
 
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  const handleEdit = (c: any) => {
+    setEditingId(c.id);
+    setFormData({
+      nombreCompleto: c.nombreCompleto,
+      dni: c.dni || "",
+      cuil: c.cuil || "",
+      telefono: c.telefono || "",
+      email: c.email || "",
+      direccion: c.direccion || "",
+    });
+    setOpen(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("¿Estás seguro de eliminar este cliente?")) return;
+    try {
+      const res = await fetch(`/api/customers/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        router.refresh();
+      } else {
+        const errorData = await res.json();
+        alert(errorData.error || "Error al eliminar");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch("/api/customers", {
-        method: "POST",
+      const url = editingId ? `/api/customers/${editingId}` : "/api/customers";
+      const method = editingId ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
       if (res.ok) {
         setOpen(false);
+        setEditingId(null);
         setFormData({ nombreCompleto: "", dni: "", cuil: "", telefono: "", email: "", direccion: "" });
         router.refresh();
       }
@@ -75,9 +109,9 @@ export default function CustomerClient({ customers }: { customers: any[] }) {
           </DialogTrigger>
           <DialogContent className="bg-[#0a0a0a] border-[#222] text-white">
             <DialogHeader>
-              <DialogTitle>Nuevo Cliente</DialogTitle>
+              <DialogTitle>{editingId ? "Editar Cliente" : "Nuevo Cliente"}</DialogTitle>
               <DialogDescription className="text-zinc-400">
-                Ingresá los datos del cliente para registrarlo en el sistema.
+                {editingId ? "Modificá los datos del cliente." : "Ingresá los datos del cliente para registrarlo en el sistema."}
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4 mt-4">
@@ -108,7 +142,7 @@ export default function CustomerClient({ customers }: { customers: any[] }) {
                 </div>
               </div>
               <Button type="submit" disabled={loading} className="w-full bg-yellow-500 hover:bg-yellow-600 text-black mt-6">
-                {loading ? "Guardando..." : "Guardar Cliente"}
+                {loading ? "Guardando..." : (editingId ? "Actualizar Cliente" : "Guardar Cliente")}
               </Button>
             </form>
           </DialogContent>
@@ -133,6 +167,7 @@ export default function CustomerClient({ customers }: { customers: any[] }) {
               <TableHead className="text-zinc-400">DNI</TableHead>
               <TableHead className="text-zinc-400">Teléfono</TableHead>
               <TableHead className="text-zinc-400">Email</TableHead>
+              <TableHead className="text-zinc-400 text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -140,7 +175,7 @@ export default function CustomerClient({ customers }: { customers: any[] }) {
               `${c.nombreCompleto} ${c.dni} ${c.telefono} ${c.email}`.toLowerCase().includes(searchTerm.toLowerCase())
             ).length === 0 ? (
               <TableRow className="border-[#222] hover:bg-transparent">
-                <TableCell colSpan={4} className="text-center py-8 text-zinc-500">
+                <TableCell colSpan={5} className="text-center py-8 text-zinc-500">
                   No hay clientes registrados
                 </TableCell>
               </TableRow>
@@ -153,6 +188,16 @@ export default function CustomerClient({ customers }: { customers: any[] }) {
                   <TableCell className="text-zinc-300">{c.dni}</TableCell>
                   <TableCell className="text-zinc-300">{c.telefono}</TableCell>
                   <TableCell className="text-zinc-300">{c.email}</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <button onClick={() => handleEdit(c)} className="p-1.5 text-zinc-400 hover:text-white hover:bg-[#222] rounded transition-colors">
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button onClick={() => handleDelete(c.id)} className="p-1.5 text-zinc-400 hover:text-red-500 hover:bg-red-500/10 rounded transition-colors">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))
             )}

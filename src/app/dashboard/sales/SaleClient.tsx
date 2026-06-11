@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { BadgeDollarSign, Plus, Search } from "lucide-react";
+import { BadgeDollarSign, Plus, Search, Trash2 } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -37,6 +37,21 @@ export default function SaleClient({ sales, vehicles, customers, session }: { sa
     total: "",
     saldoPendiente: "0",
   });
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("¿Estás seguro de anular esta venta? El vehículo y el cliente seguirán existiendo.")) return;
+    try {
+      const res = await fetch(`/api/sales/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        router.refresh();
+      } else {
+        const errorData = await res.json();
+        alert(errorData.error || "Error al eliminar");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -143,6 +158,7 @@ export default function SaleClient({ sales, vehicles, customers, session }: { sa
               <TableHead className="text-zinc-400">Vehículo</TableHead>
               <TableHead className="text-zinc-400">Forma Pago</TableHead>
               <TableHead className="text-zinc-400 text-right">Total</TableHead>
+              <TableHead className="text-zinc-400 text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -150,7 +166,7 @@ export default function SaleClient({ sales, vehicles, customers, session }: { sa
               `${s.cliente?.nombreCompleto} ${s.vehiculo?.marca} ${s.vehiculo?.modelo} ${s.formaPago}`.toLowerCase().includes(searchTerm.toLowerCase())
             ).length === 0 ? (
               <TableRow className="border-[#222] hover:bg-transparent">
-                <TableCell colSpan={5} className="text-center py-8 text-zinc-500">
+                <TableCell colSpan={6} className="text-center py-8 text-zinc-500">
                   No hay ventas registradas
                 </TableCell>
               </TableRow>
@@ -164,6 +180,11 @@ export default function SaleClient({ sales, vehicles, customers, session }: { sa
                   <TableCell className="text-zinc-300">{s.vehiculo?.marca} {s.vehiculo?.modelo}</TableCell>
                   <TableCell className="text-zinc-300">{s.formaPago}</TableCell>
                   <TableCell className="text-right text-yellow-500 font-bold">${s.total.toLocaleString()}</TableCell>
+                  <TableCell className="text-right">
+                    <button onClick={() => handleDelete(s.id)} className="p-1.5 text-zinc-400 hover:text-red-500 hover:bg-red-500/10 rounded transition-colors">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </TableCell>
                 </TableRow>
               ))
             )}

@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Car, Plus, Search } from "lucide-react";
+import { Car, Plus, Search, Edit, Trash2 } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -41,6 +41,38 @@ export default function VehicleClient({ vehicles }: { vehicles: any[] }) {
     precioVenta: "",
   });
 
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  const handleEdit = (v: any) => {
+    setEditingId(v.id);
+    setFormData({
+      marca: v.marca,
+      modelo: v.modelo,
+      anio: v.anio.toString(),
+      dominio: v.dominio,
+      chasis: v.chasis || "",
+      color: v.color || "",
+      kilometros: v.kilometros?.toString() || "",
+      precioVenta: v.precioVenta.toString(),
+    });
+    setOpen(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("¿Estás seguro de eliminar este vehículo?")) return;
+    try {
+      const res = await fetch(`/api/vehicles/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        router.refresh();
+      } else {
+        const errorData = await res.json();
+        alert(errorData.error || "Error al eliminar");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -64,13 +96,18 @@ export default function VehicleClient({ vehicles }: { vehicles: any[] }) {
         }
       }
 
-      const res = await fetch("/api/vehicles", {
-        method: "POST",
+      const payload = { ...formData, fotos: uploadedPhotos };
+      const url = editingId ? `/api/vehicles/${editingId}` : "/api/vehicles";
+      const method = editingId ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, fotos: uploadedPhotos }),
+        body: JSON.stringify(payload),
       });
       if (res.ok) {
         setOpen(false);
+        setEditingId(null);
         setFormData({ marca: "", modelo: "", anio: "", dominio: "", chasis: "", color: "", kilometros: "", precioVenta: "" });
         setFiles(null);
         router.refresh();
@@ -98,9 +135,9 @@ export default function VehicleClient({ vehicles }: { vehicles: any[] }) {
           </DialogTrigger>
           <DialogContent className="bg-[#0a0a0a] border-[#222] text-white">
             <DialogHeader>
-              <DialogTitle>Nuevo Vehículo</DialogTitle>
+              <DialogTitle>{editingId ? "Editar Vehículo" : "Nuevo Vehículo"}</DialogTitle>
               <DialogDescription className="text-zinc-400">
-                Ingresá los datos del vehículo para agregarlo al stock.
+                {editingId ? "Modificá los datos del vehículo." : "Ingresá los datos del vehículo para agregarlo al stock."}
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4 mt-4">
@@ -143,7 +180,7 @@ export default function VehicleClient({ vehicles }: { vehicles: any[] }) {
                 </div>
               </div>
               <Button type="submit" disabled={loading} className="w-full bg-yellow-500 hover:bg-yellow-600 text-black mt-6">
-                {loading ? "Guardando..." : "Guardar Vehículo"}
+                {loading ? "Guardando..." : (editingId ? "Actualizar Vehículo" : "Guardar Vehículo")}
               </Button>
             </form>
           </DialogContent>
@@ -169,6 +206,7 @@ export default function VehicleClient({ vehicles }: { vehicles: any[] }) {
               <TableHead className="text-zinc-400">Patente</TableHead>
               <TableHead className="text-zinc-400 text-right">Precio</TableHead>
               <TableHead className="text-zinc-400 text-right">Estado</TableHead>
+              <TableHead className="text-zinc-400 text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -176,7 +214,7 @@ export default function VehicleClient({ vehicles }: { vehicles: any[] }) {
               `${v.marca} ${v.modelo} ${v.dominio}`.toLowerCase().includes(searchTerm.toLowerCase())
             ).length === 0 ? (
               <TableRow className="border-[#222] hover:bg-transparent">
-                <TableCell colSpan={5} className="text-center py-8 text-zinc-500">
+                <TableCell colSpan={6} className="text-center py-8 text-zinc-500">
                   No hay vehículos registrados
                 </TableCell>
               </TableRow>
@@ -193,6 +231,16 @@ export default function VehicleClient({ vehicles }: { vehicles: any[] }) {
                     <span className="bg-[#111] border border-[#333] px-2 py-1 rounded text-xs text-zinc-300">
                       {v.estado}
                     </span>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <button onClick={() => handleEdit(v)} className="p-1.5 text-zinc-400 hover:text-white hover:bg-[#222] rounded transition-colors">
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button onClick={() => handleDelete(v.id)} className="p-1.5 text-zinc-400 hover:text-red-500 hover:bg-red-500/10 rounded transition-colors">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))

@@ -26,8 +26,8 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <div className="flex h-full w-64 flex-col bg-[#0a0a0a] border-r border-[#222]">
-      <div className="flex h-24 items-center justify-center px-4 border-b border-[#222] bg-gradient-to-b from-[#111] to-[#0a0a0a]">
+    <div className="flex h-full w-64 flex-col bg-black border-r border-[#222]">
+      <div className="flex h-24 items-center justify-center px-4 border-b border-[#222] bg-black">
         <Image src="/logo.png" alt="Rodmell Logo" width={180} height={70} className="object-contain" priority />
       </div>
       <nav className="flex-1 space-y-1 px-4 py-4">
