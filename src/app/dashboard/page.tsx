@@ -1,116 +1,188 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Car, Users, DollarSign, Activity } from "lucide-react";
+import prisma from "@/lib/prisma";
+import { Car, Users, DollarSign, Activity, TrendingUp, TrendingDown, Clock } from "lucide-react";
+import Image from "next/image";
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
 
+  // Fetch real data
+  const vehiclesCount = await prisma.vehiculo.count({ where: { estado: "DISPONIBLE" } });
+  const customersCount = await prisma.cliente.count();
+  
+  // Calculate total sales this month
+  const thisMonth = new Date();
+  thisMonth.setDate(1);
+  thisMonth.setHours(0,0,0,0);
+  
+  const salesThisMonth = await prisma.operacion.findMany({
+    where: { createdAt: { gte: thisMonth } }
+  });
+  const salesTotal = salesThisMonth.reduce((acc, sale) => acc + sale.total, 0);
+
+  // Fetch recent data
+  const recentVehicles = await prisma.vehiculo.findMany({
+    take: 4,
+    orderBy: { createdAt: "desc" }
+  });
+
+  const recentActivity = await prisma.activityLog.findMany({
+    take: 6,
+    orderBy: { createdAt: "desc" },
+    include: { user: { select: { name: true } } }
+  });
+
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-white">Dashboard</h1>
-        <p className="text-zinc-400 mt-1">
-          Bienvenido de vuelta, {session?.user?.name || "Administrador"}
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="flex flex-col gap-2">
+        <h1 className="text-4xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white to-zinc-400">
+          Dashboard
+        </h1>
+        <p className="text-zinc-400 text-lg">
+          Bienvenido de vuelta, <span className="text-yellow-500 font-semibold">{session?.user?.name || "Administrador"}</span>
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="bg-[#0a0a0a] border-[#222] hover:border-yellow-500/50 transition-colors">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-zinc-400">
-              Vehículos en Stock
-            </CardTitle>
-            <Car className="h-4 w-4 text-yellow-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-white">124</div>
-            <p className="text-xs text-zinc-500 mt-1">
-              +4 agregados este mes
-            </p>
-          </CardContent>
-        </Card>
+      {/* KPI Cards */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        {/* Vehicles */}
+        <div className="group relative bg-[#0a0a0a] border border-[#222] rounded-2xl p-6 overflow-hidden transition-all hover:border-yellow-500/50 hover:shadow-[0_0_30px_rgba(234,179,8,0.1)]">
+          <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-yellow-500/5 blur-3xl group-hover:bg-yellow-500/10 transition-all" />
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-zinc-400 font-medium">Vehículos en Stock</h3>
+            <div className="p-3 bg-gradient-to-br from-[#111] to-[#0a0a0a] border border-[#333] rounded-xl group-hover:border-yellow-500/30 transition-all">
+              <Car className="h-5 w-5 text-yellow-500" />
+            </div>
+          </div>
+          <p className="text-4xl font-bold text-white mb-2">{vehiclesCount}</p>
+          <div className="flex items-center text-xs font-medium text-emerald-500">
+            <TrendingUp className="w-3 h-3 mr-1" />
+            Actualizado en tiempo real
+          </div>
+        </div>
         
-        <Card className="bg-[#0a0a0a] border-[#222] hover:border-yellow-500/50 transition-colors">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-zinc-400">
-              Ventas del Mes
-            </CardTitle>
-            <DollarSign className="h-4 w-4 text-yellow-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-white">$145,000</div>
-            <p className="text-xs text-emerald-500 mt-1 flex items-center">
-              +12% desde el mes pasado
-            </p>
-          </CardContent>
-        </Card>
+        {/* Sales */}
+        <div className="group relative bg-[#0a0a0a] border border-[#222] rounded-2xl p-6 overflow-hidden transition-all hover:border-yellow-500/50 hover:shadow-[0_0_30px_rgba(234,179,8,0.1)]">
+          <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-yellow-500/5 blur-3xl group-hover:bg-yellow-500/10 transition-all" />
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-zinc-400 font-medium">Ventas del Mes</h3>
+            <div className="p-3 bg-gradient-to-br from-[#111] to-[#0a0a0a] border border-[#333] rounded-xl group-hover:border-yellow-500/30 transition-all">
+              <DollarSign className="h-5 w-5 text-yellow-500" />
+            </div>
+          </div>
+          <p className="text-4xl font-bold text-white mb-2">${salesTotal.toLocaleString()}</p>
+          <div className="flex items-center text-xs font-medium text-emerald-500">
+            <TrendingUp className="w-3 h-3 mr-1" />
+            {salesThisMonth.length} operaciones este mes
+          </div>
+        </div>
 
-        <Card className="bg-[#0a0a0a] border-[#222] hover:border-yellow-500/50 transition-colors">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-zinc-400">
-              Nuevos Clientes
-            </CardTitle>
-            <Users className="h-4 w-4 text-yellow-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-white">+48</div>
-            <p className="text-xs text-zinc-500 mt-1">
-              +18% en los últimos 30 días
-            </p>
-          </CardContent>
-        </Card>
+        {/* Customers */}
+        <div className="group relative bg-[#0a0a0a] border border-[#222] rounded-2xl p-6 overflow-hidden transition-all hover:border-yellow-500/50 hover:shadow-[0_0_30px_rgba(234,179,8,0.1)]">
+          <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-yellow-500/5 blur-3xl group-hover:bg-yellow-500/10 transition-all" />
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-zinc-400 font-medium">Nuevos Clientes</h3>
+            <div className="p-3 bg-gradient-to-br from-[#111] to-[#0a0a0a] border border-[#333] rounded-xl group-hover:border-yellow-500/30 transition-all">
+              <Users className="h-5 w-5 text-yellow-500" />
+            </div>
+          </div>
+          <p className="text-4xl font-bold text-white mb-2">{customersCount}</p>
+          <div className="flex items-center text-xs font-medium text-zinc-500">
+            En la base de datos
+          </div>
+        </div>
 
-        <Card className="bg-[#0a0a0a] border-[#222] hover:border-yellow-500/50 transition-colors">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-zinc-400">
-              Actividad Reciente
-            </CardTitle>
-            <Activity className="h-4 w-4 text-yellow-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-white">Alta</div>
-            <p className="text-xs text-zinc-500 mt-1">
-              12 acciones en la última hora
-            </p>
-          </CardContent>
-        </Card>
+        {/* Activity */}
+        <div className="group relative bg-[#0a0a0a] border border-[#222] rounded-2xl p-6 overflow-hidden transition-all hover:border-yellow-500/50 hover:shadow-[0_0_30px_rgba(234,179,8,0.1)]">
+          <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-yellow-500/5 blur-3xl group-hover:bg-yellow-500/10 transition-all" />
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-zinc-400 font-medium">Actividad Reciente</h3>
+            <div className="p-3 bg-gradient-to-br from-[#111] to-[#0a0a0a] border border-[#333] rounded-xl group-hover:border-yellow-500/30 transition-all">
+              <Activity className="h-5 w-5 text-yellow-500" />
+            </div>
+          </div>
+          <p className="text-4xl font-bold text-white mb-2">{recentActivity.length > 0 ? "Alta" : "Baja"}</p>
+          <div className="flex items-center text-xs font-medium text-zinc-500">
+            <Clock className="w-3 h-3 mr-1" />
+            Monitoreo constante
+          </div>
+        </div>
       </div>
       
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7 mt-4">
-        <Card className="col-span-4 bg-[#0a0a0a] border-[#222]">
-          <CardHeader>
-            <CardTitle className="text-lg text-white">Últimos Vehículos Agregados</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[250px] w-full rounded-md border border-[#333] border-dashed flex items-center justify-center bg-[#111]">
-              <span className="text-sm text-zinc-500">Tabla de vehículos (Próximamente)</span>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Lower Grids */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
         
-        <Card className="col-span-3 bg-[#0a0a0a] border-[#222]">
-          <CardHeader>
-            <CardTitle className="text-lg text-white">Actividad del Sistema</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex items-center gap-4">
-                  <div className="w-2 h-2 rounded-full bg-yellow-500" />
-                  <div className="flex-1 space-y-1">
-                    <p className="text-sm font-medium leading-none text-zinc-200">
-                      Usuario admin se conectó
-                    </p>
-                    <p className="text-xs text-zinc-500">
-                      Hace {i * 10} minutos
-                    </p>
-                  </div>
+        {/* Recent Vehicles */}
+        <div className="col-span-4 bg-[#0a0a0a] border border-[#222] rounded-2xl overflow-hidden">
+          <div className="p-6 border-b border-[#222] bg-gradient-to-r from-[#111] to-transparent">
+            <h3 className="text-xl font-bold text-white">Últimos Vehículos Agregados</h3>
+            <p className="text-zinc-500 text-sm mt-1">Nuevos ingresos al inventario.</p>
+          </div>
+          <div className="p-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {recentVehicles.length === 0 ? (
+                <div className="col-span-full h-32 flex items-center justify-center border border-[#222] border-dashed rounded-xl bg-[#111]">
+                  <p className="text-zinc-500">No hay vehículos recientes.</p>
                 </div>
-              ))}
+              ) : (
+                recentVehicles.map(vehiculo => (
+                  <div key={vehiculo.id} className="flex gap-4 p-3 rounded-xl border border-[#222] bg-[#111] hover:border-[#444] transition-colors">
+                    <div className="relative w-20 h-16 rounded-md overflow-hidden bg-black flex-shrink-0">
+                      {vehiculo.fotos && vehiculo.fotos.length > 0 ? (
+                        <Image src={vehiculo.fotos[0]} alt={vehiculo.modelo} fill className="object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Car className="w-6 h-6 text-zinc-600" />
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <h4 className="text-white font-bold text-sm leading-tight">{vehiculo.marca} {vehiculo.modelo}</h4>
+                      <p className="text-zinc-400 text-xs mt-1">{vehiculo.dominio} • {vehiculo.anio}</p>
+                      <p className="text-yellow-500 font-semibold text-sm mt-1">${vehiculo.precioVenta.toLocaleString()}</p>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
+        
+        {/* Activity Logs */}
+        <div className="col-span-3 bg-[#0a0a0a] border border-[#222] rounded-2xl overflow-hidden">
+          <div className="p-6 border-b border-[#222] bg-gradient-to-r from-[#111] to-transparent">
+            <h3 className="text-xl font-bold text-white">Actividad del Sistema</h3>
+            <p className="text-zinc-500 text-sm mt-1">Acciones recientes del equipo.</p>
+          </div>
+          <div className="p-6">
+            <div className="space-y-6 relative before:absolute before:inset-0 before:ml-[11px] before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-yellow-500 before:via-[#333] before:to-transparent">
+              {recentActivity.length === 0 ? (
+                <p className="text-zinc-500 text-center py-4">No hay actividad registrada.</p>
+              ) : (
+                recentActivity.map((log) => (
+                  <div key={log.id} className="relative flex items-start gap-4">
+                    <div className="absolute left-0 w-6 h-6 bg-[#111] border-2 border-yellow-500 rounded-full z-10 flex items-center justify-center mt-0.5">
+                      <div className="w-2 h-2 bg-yellow-500 rounded-full" />
+                    </div>
+                    <div className="ml-10">
+                      <p className="text-sm font-semibold text-white">
+                        {log.action}
+                      </p>
+                      <p className="text-sm text-zinc-400 mt-0.5">
+                        <span className="text-zinc-300 font-medium">@{log.user?.name}</span> {log.details ? `- ${log.details}` : ''}
+                      </p>
+                      <p className="text-xs text-zinc-600 mt-1">
+                        {new Date(log.createdAt).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   );

@@ -27,8 +27,8 @@ export function Sidebar() {
 
   return (
     <div className="flex h-full w-64 flex-col bg-[#0a0a0a] border-r border-[#222]">
-      <div className="flex h-16 items-center px-6 border-b border-[#222]">
-        <Image src="/logo.png" alt="Rodmell Logo" width={120} height={40} className="object-contain" priority />
+      <div className="flex h-24 items-center justify-center px-4 border-b border-[#222] bg-gradient-to-b from-[#111] to-[#0a0a0a]">
+        <Image src="/logo.png" alt="Rodmell Logo" width={180} height={70} className="object-contain" priority />
       </div>
       <nav className="flex-1 space-y-1 px-4 py-4">
         {sidebarLinks.map((link) => {
@@ -40,8 +40,8 @@ export function Sidebar() {
               className={cn(
                 "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                 isActive
-                  ? "bg-yellow-500/10 text-yellow-500 border border-yellow-500/20"
-                  : "text-zinc-400 hover:bg-[#111] hover:text-white"
+                  ? "bg-gradient-to-r from-yellow-500/20 to-transparent text-yellow-500 border-l-4 border-yellow-500"
+                  : "text-zinc-400 hover:bg-[#111] hover:text-white border-l-4 border-transparent"
               )}
             >
               <link.icon className="h-5 w-5" />
