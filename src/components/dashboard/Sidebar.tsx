@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
@@ -25,9 +26,7 @@ export function Sidebar() {
   return (
     <div className="flex h-full w-64 flex-col bg-[#0a0a0a] border-r border-[#222]">
       <div className="flex h-16 items-center px-6 border-b border-[#222]">
-        <h2 className="text-2xl font-bold tracking-tight text-yellow-500">
-          Rodmell
-        </h2>
+        <Image src="/logo.png" alt="Rodmell Logo" width={120} height={40} className="object-contain" priority />
       </div>
       <nav className="flex-1 space-y-1 px-4 py-4">
         {sidebarLinks.map((link) => {
