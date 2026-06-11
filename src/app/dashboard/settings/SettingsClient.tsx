@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Settings, Plus, UserPlus } from "lucide-react";
+import { Settings, UserPlus } from "lucide-react";
 import {
   Table,
   TableBody,

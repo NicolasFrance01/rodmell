@@ -45,7 +45,7 @@ export default function VehicleClient({ vehicles }: { vehicles: any[] }) {
     e.preventDefault();
     setLoading(true);
     try {
-      let uploadedPhotos: string[] = [];
+      const uploadedPhotos: string[] = [];
       
       if (files && files.length > 0) {
         for (let i = 0; i < files.length; i++) {
