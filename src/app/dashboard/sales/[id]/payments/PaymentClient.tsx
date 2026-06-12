@@ -133,10 +133,8 @@ export default function PaymentClient({ sale, totalRecaudado }: { sale: any, tot
             </div>
             
             <Dialog open={openPago} onOpenChange={setOpenPago}>
-              <DialogTrigger asChild>
-                <Button className="bg-[#222] hover:bg-[#333] text-white border border-[#444]">
-                  <Plus className="w-4 h-4 mr-2" /> Añadir Pago
-                </Button>
+              <DialogTrigger className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 bg-[#222] hover:bg-[#333] text-white border border-[#444]">
+                <Plus className="w-4 h-4 mr-2" /> Añadir Pago
               </DialogTrigger>
               <DialogContent className="bg-[#0a0a0a] border-[#222] text-white">
                 <DialogHeader>
@@ -201,10 +199,8 @@ export default function PaymentClient({ sale, totalRecaudado }: { sale: any, tot
             </div>
             
             <Dialog open={openCuotas} onOpenChange={setOpenCuotas}>
-              <DialogTrigger asChild>
-                <Button className="bg-[#222] hover:bg-[#333] text-white border border-[#444]">
-                  <Calendar className="w-4 h-4 mr-2" /> Generar Plan
-                </Button>
+              <DialogTrigger className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 bg-[#222] hover:bg-[#333] text-white border border-[#444]">
+                <Calendar className="w-4 h-4 mr-2" /> Generar Plan
               </DialogTrigger>
               <DialogContent className="bg-[#0a0a0a] border-[#222] text-white">
                 <DialogHeader>
