@@ -3,7 +3,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { BadgeDollarSign, Plus, Search, Trash2 } from "lucide-react";
+import { BadgeDollarSign, Plus, Search, Trash2, Edit, Wallet } from "lucide-react";
+import Link from "next/link";
 import {
   Table,
   TableBody,
@@ -38,6 +39,21 @@ export default function SaleClient({ sales, vehicles, customers, session }: { sa
     saldoPendiente: "0",
   });
 
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  const handleEdit = (s: any) => {
+    setEditingId(s.id);
+    setFormData({
+      clienteId: s.clienteId,
+      vehiculoId: s.vehiculoId,
+      precioVehiculo: s.precioVehiculo.toString(),
+      formaPago: s.formaPago || "",
+      total: s.total.toString(),
+      saldoPendiente: s.saldoPendiente.toString(),
+    });
+    setOpen(true);
+  };
+
   const handleDelete = async (id: string) => {
     if (!confirm("¿Estás seguro de anular esta venta? El vehículo y el cliente seguirán existiendo.")) return;
     try {
@@ -57,16 +73,22 @@ export default function SaleClient({ sales, vehicles, customers, session }: { sa
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch("/api/sales", {
-        method: "POST",
+      const payload = {
+        ...formData,
+        vendedorId: session?.user?.id || "cl123", // Replace with actual session user id
+      };
+      
+      const url = editingId ? `/api/sales/${editingId}` : "/api/sales";
+      const method = editingId ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
-          vendedorId: session?.user?.id || "cl123", // Replace with actual session user id
-        }),
+        body: JSON.stringify(payload),
       });
       if (res.ok) {
         setOpen(false);
+        setEditingId(null);
         setFormData({ clienteId: "", vehiculoId: "", precioVehiculo: "", formaPago: "", total: "", saldoPendiente: "0" });
         router.refresh();
       }
@@ -93,9 +115,9 @@ export default function SaleClient({ sales, vehicles, customers, session }: { sa
           </DialogTrigger>
           <DialogContent className="bg-[#0a0a0a] border-[#222] text-white">
             <DialogHeader>
-              <DialogTitle>Registrar Venta</DialogTitle>
+              <DialogTitle>{editingId ? "Editar Venta" : "Registrar Venta"}</DialogTitle>
               <DialogDescription className="text-zinc-400">
-                Seleccioná el cliente, el vehículo y los detalles de pago.
+                {editingId ? "Modificá los detalles de la operación." : "Seleccioná el cliente, el vehículo y los detalles de pago."}
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4 mt-4">
@@ -132,7 +154,7 @@ export default function SaleClient({ sales, vehicles, customers, session }: { sa
                 </div>
               </div>
               <Button type="submit" disabled={loading} className="w-full bg-yellow-500 hover:bg-yellow-600 text-black mt-6">
-                {loading ? "Procesando..." : "Confirmar Venta"}
+                {loading ? "Procesando..." : (editingId ? "Actualizar Venta" : "Confirmar Venta")}
               </Button>
             </form>
           </DialogContent>
@@ -181,9 +203,17 @@ export default function SaleClient({ sales, vehicles, customers, session }: { sa
                   <TableCell className="text-zinc-300">{s.formaPago}</TableCell>
                   <TableCell className="text-right text-yellow-500 font-bold">${s.total.toLocaleString()}</TableCell>
                   <TableCell className="text-right">
-                    <button onClick={() => handleDelete(s.id)} className="p-1.5 text-zinc-400 hover:text-red-500 hover:bg-red-500/10 rounded transition-colors">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center justify-end gap-2">
+                      <Link href={`/dashboard/sales/${s.id}/payments`} className="p-1.5 text-zinc-400 hover:text-green-500 hover:bg-green-500/10 rounded transition-colors" title="Gestión de Pagos y Cuotas">
+                        <Wallet className="w-4 h-4" />
+                      </Link>
+                      <button onClick={() => handleEdit(s)} className="p-1.5 text-zinc-400 hover:text-white hover:bg-[#222] rounded transition-colors">
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button onClick={() => handleDelete(s.id)} className="p-1.5 text-zinc-400 hover:text-red-500 hover:bg-red-500/10 rounded transition-colors">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
