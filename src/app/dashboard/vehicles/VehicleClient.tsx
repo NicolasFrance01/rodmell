@@ -176,7 +176,7 @@ export default function VehicleClient({ vehicles }: { vehicles: any[] }) {
           <DialogTrigger className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 shadow h-9 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-semibold">
             <Plus className="w-4 h-4 mr-2" /> Agregar Vehículo
           </DialogTrigger>
-          <DialogContent className="bg-[#0a0a0a] border-[#222] text-white">
+          <DialogContent className="bg-[#0a0a0a] border-[#222] text-white sm:max-w-2xl lg:max-w-3xl">
             <DialogHeader>
               <DialogTitle>{editingId ? "Editar Vehículo" : "Nuevo Vehículo"}</DialogTitle>
               <DialogDescription className="text-zinc-400">

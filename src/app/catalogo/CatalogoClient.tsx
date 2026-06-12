@@ -148,7 +148,7 @@ export default function CatalogoClient({ vehiclesData }: { vehiclesData: any[] }
 
       {/* Popup Detalle */}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="bg-[#0a0a0a] border-[#222] text-white max-w-4xl p-0 overflow-hidden" showCloseButton={false}>
+        <DialogContent className="bg-[#0a0a0a] border-[#222] text-white w-[95vw] sm:max-w-4xl lg:max-w-5xl p-0 overflow-hidden" showCloseButton={false}>
           {selectedVehicle && (
             <div className="flex flex-col md:flex-row h-full max-h-[90vh]">
               {/* Left Column: Image Gallery */}

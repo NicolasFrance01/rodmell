@@ -26,6 +26,7 @@ export async function POST(req: Request) {
         kilometros: parseInt(body.kilometros),
         precioVenta: parseFloat(body.precioVenta),
         estado: body.estado || "DISPONIBLE",
+        descripcion: body.descripcion || null,
         fotos: body.fotos || [],
       },
     });
