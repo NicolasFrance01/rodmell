@@ -1,7 +1,7 @@
 import { PublicHeader } from "@/components/public/PublicHeader";
 import { PublicFooter } from "@/components/public/PublicFooter";
 import Link from "next/link";
-import { ArrowRight, ShieldCheck, Gem, Gauge, MessageCircle, Instagram, Flag } from "lucide-react";
+import { ArrowRight, ShieldCheck, Gem, Gauge, MessageCircle, Flag } from "lucide-react";
 
 export default function Home() {
   return (
@@ -85,7 +85,21 @@ export default function Home() {
                     <MessageCircle className="w-7 h-7" />
                   </a>
                   <a href="https://www.instagram.com/rodmellautomotores?igsh=MWRteGdiazhndHVteA==" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-14 h-14 bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] text-white rounded-full hover:scale-110 hover:rotate-12 transition-all duration-300 shadow-[0_0_15px_rgba(220,39,67,0.3)]">
-                    <Instagram className="w-7 h-7" />
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="28"
+                      height="28"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+                      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                      <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+                    </svg>
                   </a>
                 </div>
               </div>
