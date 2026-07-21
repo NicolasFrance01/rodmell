@@ -19,11 +19,10 @@ export default function ReportsClient({ sales, vehicles, customers }: { sales: a
   const [historySearch, setHistorySearch] = useState("");
   
   const calculateRecaudado = (sale: any) => {
-    const efectivo = sale.efectivo || 0;
     const autoPartePago = sale.autoPartePago || 0;
     const pagos = sale.pagos?.reduce((sum: number, p: any) => sum + p.importe, 0) || 0;
     const cuotas = sale.cuotas?.filter((c: any) => c.estado === "PAGADA").reduce((sum: number, c: any) => sum + c.valor, 0) || 0;
-    return efectivo + autoPartePago + pagos + cuotas;
+    return autoPartePago + pagos + cuotas;
   };
 
   const totalRevenue = sales.reduce((acc, sale) => acc + calculateRecaudado(sale), 0);
@@ -158,17 +157,6 @@ export default function ReportsClient({ sales, vehicles, customers }: { sales: a
                 const allMovements = sales.flatMap(sale => {
                   const movs = [];
 
-                  if (sale.efectivo && sale.efectivo > 0) {
-                    movs.push({
-                      id: `efectivo-${sale.id}`,
-                      fecha: new Date(sale.createdAt),
-                      tipo: "Efectivo (Pago Inicial)",
-                      monto: sale.efectivo,
-                      descripcion: `${sale.vehiculo?.marca || ''} ${sale.vehiculo?.modelo || ''}`,
-                      cliente: sale.cliente?.nombreCompleto || 'Cliente Eliminado'
-                    });
-                  }
-
                   if (sale.autoPartePago && sale.autoPartePago > 0) {
                     movs.push({
                       id: `autopago-${sale.id}`,
@@ -183,7 +171,7 @@ export default function ReportsClient({ sales, vehicles, customers }: { sales: a
                   const pagos = sale.pagos?.map((p: any) => ({
                     id: `pago-${p.id}`,
                     fecha: new Date(p.fecha),
-                    tipo: p.medioPago === "SENA" ? "SEÑA" : "Abono",
+                    tipo: p.observaciones === "Pago Inicial" ? "Efectivo (Pago Inicial)" : (p.medioPago === "SENA" ? "SEÑA" : "Abono"),
                     monto: p.importe,
                     descripcion: `${sale.vehiculo?.marca || ''} ${sale.vehiculo?.modelo || ''}`,
                     cliente: sale.cliente?.nombreCompleto || 'Cliente Eliminado'

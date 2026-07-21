@@ -20,7 +20,6 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     // Convert strings to floats where necessary
     if (updateData.precioVehiculo !== undefined) updateData.precioVehiculo = parseFloat(updateData.precioVehiculo);
     if (updateData.total !== undefined) updateData.total = parseFloat(updateData.total);
-    if (updateData.saldoPendiente !== undefined) updateData.saldoPendiente = parseFloat(updateData.saldoPendiente);
     
     if (updateData.efectivo !== undefined && updateData.efectivo !== null) updateData.efectivo = parseFloat(updateData.efectivo);
     if (updateData.credito !== undefined && updateData.credito !== null) updateData.credito = parseFloat(updateData.credito);
@@ -30,6 +29,20 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     if (updateData.gastosPatente !== undefined && updateData.gastosPatente !== null) updateData.gastosPatente = parseFloat(updateData.gastosPatente);
     if (updateData.gastosTransferencia !== undefined && updateData.gastosTransferencia !== null) updateData.gastosTransferencia = parseFloat(updateData.gastosTransferencia);
     if (updateData.gastosPrendarios !== undefined && updateData.gastosPrendarios !== null) updateData.gastosPrendarios = parseFloat(updateData.gastosPrendarios);
+
+    const currentSale = await prisma.operacion.findUnique({
+      where: { id },
+      include: { pagos: true, cuotas: true }
+    });
+
+    if (currentSale) {
+      const total = updateData.total !== undefined ? updateData.total : currentSale.total;
+      const autoPartePago = updateData.autoPartePago !== undefined ? updateData.autoPartePago : (currentSale.autoPartePago || 0);
+      const totalPagos = currentSale.pagos.reduce((sum, p) => sum + p.importe, 0);
+      const totalCuotas = currentSale.cuotas.filter(c => c.estado === "PAGADA").reduce((sum, c) => sum + c.valor, 0);
+      
+      updateData.saldoPendiente = total - (autoPartePago || 0) - totalPagos - totalCuotas;
+    }
 
     const sale = await prisma.operacion.update({
       where: { id },

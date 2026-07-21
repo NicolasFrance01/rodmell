@@ -124,6 +124,8 @@ export default function SaleClient({ sales, vehicles, customers, session }: { sa
 
     hasEfectivo: false,
     efectivo: "",
+    pagoInicialCobradoTotalmente: true,
+    efectivoCobradoEnActo: "",
 
     hasCredito: false,
     credito: "",
@@ -166,8 +168,11 @@ export default function SaleClient({ sales, vehicles, customers, session }: { sa
 
     // Pagos
     const pagoEfectivo = formData.hasEfectivo ? parseThousands(formData.efectivo) : 0;
+    const cobradoEnElActo = formData.hasEfectivo
+      ? (formData.pagoInicialCobradoTotalmente ? pagoEfectivo : parseThousands(formData.efectivoCobradoEnActo))
+      : 0;
     const pagoAuto = formData.hasAuto ? parseThousands(formData.autoPartePago) : 0;
-    const totalPagado = pagoEfectivo + pagoAuto;
+    const totalPagado = cobradoEnElActo + pagoAuto;
 
     // Saldo Pendiente
     const calculadoSaldo = calculadoTotal - totalPagado;
@@ -188,7 +193,7 @@ export default function SaleClient({ sales, vehicles, customers, session }: { sa
     }));
   }, [
     formData.precioVehiculo,
-    formData.hasEfectivo, formData.efectivo,
+    formData.hasEfectivo, formData.efectivo, formData.pagoInicialCobradoTotalmente, formData.efectivoCobradoEnActo,
     formData.hasCredito, formData.credito, formData.porcentajeQuebranto,
     formData.hasAuto, formData.autoPartePago,
     formData.gastosPatente, formData.gastosTransferencia, formData.gastosPrendarios
@@ -223,6 +228,7 @@ export default function SaleClient({ sales, vehicles, customers, session }: { sa
     setFormData({
       clienteId: "", vehiculoId: "", precioVehiculo: "", 
       hasEfectivo: false, efectivo: "",
+      pagoInicialCobradoTotalmente: true, efectivoCobradoEnActo: "",
       hasCredito: false, credito: "", porcentajeQuebranto: "", quebranto: "0",
       hasAuto: false, autoPartePago: "", detalleAutoPartePago: "",
       gastosPatente: "", gastosTransferencia: "", gastosPrendarios: "", confirmado: false,
@@ -239,6 +245,8 @@ export default function SaleClient({ sales, vehicles, customers, session }: { sa
       precioVehiculo: formatThousands(s.precioVehiculo),
       hasEfectivo: (s.efectivo && s.efectivo > 0) ? true : false,
       efectivo: s.efectivo ? formatThousands(s.efectivo) : "",
+      pagoInicialCobradoTotalmente: true,
+      efectivoCobradoEnActo: "",
       hasCredito: (s.credito && s.credito > 0) ? true : false,
       credito: s.credito ? formatThousands(s.credito) : "",
       porcentajeQuebranto: s.porcentajeQuebranto ? s.porcentajeQuebranto.toString() : "",
@@ -284,6 +292,7 @@ export default function SaleClient({ sales, vehicles, customers, session }: { sa
         formaPago: formData.formaPago,
         
         efectivo: formData.hasEfectivo ? parseThousands(formData.efectivo) : null,
+        cobradoEnElActo: formData.hasEfectivo ? (formData.pagoInicialCobradoTotalmente ? parseThousands(formData.efectivo) : parseThousands(formData.efectivoCobradoEnActo)) : 0,
         credito: formData.hasCredito ? parseThousands(formData.credito) : null,
         porcentajeQuebranto: formData.hasCredito ? (parseFloat(formData.porcentajeQuebranto) || 0) : null,
         quebranto: formData.hasCredito ? parseThousands(formData.quebranto) : null,
@@ -315,6 +324,7 @@ export default function SaleClient({ sales, vehicles, customers, session }: { sa
         setFormData({ 
           clienteId: "", vehiculoId: "", precioVehiculo: "", 
           hasEfectivo: false, efectivo: "",
+          pagoInicialCobradoTotalmente: true, efectivoCobradoEnActo: "",
           hasCredito: false, credito: "", porcentajeQuebranto: "", quebranto: "0",
           hasAuto: false, autoPartePago: "", detalleAutoPartePago: "",
           gastosPatente: "", gastosTransferencia: "", gastosPrendarios: "", confirmado: false,
@@ -428,9 +438,30 @@ export default function SaleClient({ sales, vehicles, customers, session }: { sa
                         <Label htmlFor="chk-efectivo" className="text-zinc-300 cursor-pointer">Efectivo</Label>
                       </div>
                       {formData.hasEfectivo && (
-                        <div className="pl-6 space-y-2">
-                          <Label className="text-xs text-zinc-500">Monto en Efectivo</Label>
-                          <Input type="text" className="bg-[#0a0a0a] border-[#333]" placeholder="0" value={formData.efectivo} onChange={e => handleAmountChange("efectivo", e.target.value)} />
+                        <div className="pl-6 space-y-3">
+                          <div className="space-y-1">
+                            <Label className="text-xs text-zinc-400">Pago Inicial Pactado</Label>
+                            <Input type="text" className="bg-[#0a0a0a] border-[#333]" placeholder="0" value={formData.efectivo} onChange={e => handleAmountChange("efectivo", e.target.value)} />
+                          </div>
+                          {!editingId && (
+                            <div className="space-y-3 pt-2 border-t border-[#222]">
+                              <div className="flex items-center space-x-2">
+                                <Checkbox 
+                                  id="chk-pago-cobrado-total" 
+                                  checked={formData.pagoInicialCobradoTotalmente} 
+                                  onCheckedChange={(c) => setFormData({...formData, pagoInicialCobradoTotalmente: !!c})} 
+                                  className="border-zinc-500 data-[state=checked]:bg-yellow-500 data-[state=checked]:text-black" 
+                                />
+                                <Label htmlFor="chk-pago-cobrado-total" className="text-xs text-zinc-300 cursor-pointer">Cobrado totalmente en el acto</Label>
+                              </div>
+                              {!formData.pagoInicialCobradoTotalmente && (
+                                <div className="space-y-1 pl-6 animate-in fade-in slide-in-from-top-1 duration-200">
+                                  <Label className="text-xs text-zinc-400">Monto Cobrado en el Acto</Label>
+                                  <Input type="text" className="bg-[#0a0a0a] border-[#333]" placeholder="0" value={formData.efectivoCobradoEnActo} onChange={e => handleAmountChange("efectivoCobradoEnActo", e.target.value)} />
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>

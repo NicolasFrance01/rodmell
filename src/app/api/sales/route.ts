@@ -32,6 +32,11 @@ export async function POST(req: Request) {
     const body = await req.json();
     const generatedComprobante = "OP-" + Math.random().toString(36).substring(2, 8).toUpperCase();
 
+    const total = parseFloat(body.total);
+    const autoPartePago = body.autoPartePago !== null ? parseFloat(body.autoPartePago) : 0;
+    const cobradoEnElActo = body.cobradoEnElActo !== null && body.cobradoEnElActo !== undefined ? parseFloat(body.cobradoEnElActo) : 0;
+    const calculatedSaldoPendiente = total - autoPartePago - cobradoEnElActo;
+
     const sale = await prisma.operacion.create({
       data: {
         clienteId: body.clienteId,
@@ -52,12 +57,26 @@ export async function POST(req: Request) {
         gastosPrendarios: body.gastosPrendarios !== null && body.gastosPrendarios !== undefined ? parseFloat(body.gastosPrendarios) : null,
         confirmado: body.confirmado === true,
         
-        total: parseFloat(body.total),
-        saldoPendiente: parseFloat(body.saldoPendiente),
+        total: total,
+        saldoPendiente: calculatedSaldoPendiente,
         comprobante: generatedComprobante,
       },
       include: { vehiculo: true, cliente: true }
     });
+
+    if (cobradoEnElActo > 0) {
+      const generatedPagoComprobante = "PG-" + Math.random().toString(36).substring(2, 8).toUpperCase();
+      await prisma.pago.create({
+        data: {
+          operacionId: sale.id,
+          importe: cobradoEnElActo,
+          medioPago: "EFECTIVO",
+          observaciones: "Pago Inicial",
+          fecha: new Date(),
+          comprobante: generatedPagoComprobante,
+        }
+      });
+    }
     
     // Update vehicle status to VENDIDO
     await prisma.vehiculo.update({

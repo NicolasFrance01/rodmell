@@ -323,9 +323,15 @@ export default function PaymentClient({ sale, totalRecaudado, session }: { sale:
             </div>
             
             <Dialog open={openPago} onOpenChange={setOpenPago}>
-              <DialogTrigger className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 bg-[#222] hover:bg-[#333] text-white border border-[#444]">
+              <Button 
+                onClick={() => {
+                  setPagoData({ importe: "", medioPago: "EFECTIVO", observaciones: "", file: null });
+                  setOpenPago(true);
+                }}
+                className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 bg-[#222] hover:bg-[#333] text-white border border-[#444]"
+              >
                 <Plus className="w-4 h-4 mr-2" /> Añadir Pago
-              </DialogTrigger>
+              </Button>
               <DialogContent className="bg-[#0a0a0a] border-[#222] text-white">
                 <DialogHeader>
                   <DialogTitle>Registrar Pago / Entrega</DialogTitle>
@@ -362,18 +368,15 @@ export default function PaymentClient({ sale, totalRecaudado, session }: { sale:
           
           <div className="p-0 flex-1">
             {(() => {
+              // Calculate Pago Inicial tracking
+              const totalPagoInicialAcordado = sale.efectivo || 0;
+              const pagosInicialesCobrados = sale.pagos.filter((p: any) => 
+                p.observaciones?.trim() === "Pago Inicial" || p.observaciones?.trim().startsWith("Pago Inicial -")
+              );
+              const totalPagoInicialCobrado = pagosInicialesCobrados.reduce((acc: number, p: any) => acc + p.importe, 0);
+              const pagoInicialPendiente = Math.max(0, totalPagoInicialAcordado - totalPagoInicialCobrado);
+
               const iniciales = [];
-              if (sale.efectivo > 0) {
-                iniciales.push({
-                  id: `efectivo-${sale.id}`,
-                  isInitial: true,
-                  medioPago: "EFECTIVO (Venta)",
-                  fecha: sale.createdAt,
-                  observaciones: "Pago Inicial",
-                  importe: sale.efectivo,
-                  comprobante: sale.comprobante || sale.id
-                });
-              }
               if (sale.autoPartePago > 0) {
                 iniciales.push({
                   id: `autopago-${sale.id}`,
@@ -390,51 +393,91 @@ export default function PaymentClient({ sale, totalRecaudado, session }: { sale:
                 `${p.comprobante || p.id.slice(-6).toUpperCase()} ${p.medioPago} ${p.observaciones || ""}`.toLowerCase().includes(searchTerm.toLowerCase())
               );
 
-              if (allPagos.length === 0) {
-                return <div className="p-8 text-center text-zinc-500">No hay pagos iniciales registrados.</div>;
-              }
-
               return (
-                <div className="divide-y divide-[#222]">
-                  {allPagos.map((pago: any) => (
-                    <div key={pago.id} className="p-4 flex items-center justify-between hover:bg-[#111] transition-colors">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center border border-green-500/20">
-                          <DollarSign className="w-5 h-5 text-green-500" />
-                        </div>
-                        <div>
-                          <p className="text-white font-medium">{pago.medioPago === "SENA" ? "SEÑA" : pago.medioPago}</p>
-                          <p className="text-zinc-500 text-xs">{new Date(pago.fecha).toLocaleDateString()} {pago.observaciones ? `• ${pago.observaciones}` : ""}</p>
-                          <div className="flex gap-2 mt-1">
-                            {pago.comprobanteUrl && (
-                              <a href={pago.comprobanteUrl} target="_blank" rel="noreferrer" className="text-xs text-blue-400 hover:underline">Ver adjunto</a>
-                            )}
-                            <span className="text-xs text-yellow-500 font-mono">Nº {pago.comprobante || pago.id.slice(-6).toUpperCase()}</span>
-                          </div>
-                        </div>
+                <div className="flex flex-col divide-y divide-[#222]">
+                  {/* Tracking de Pago Inicial */}
+                  {totalPagoInicialAcordado > 0 && (
+                    <div className="p-4 bg-[#111]/30 grid grid-cols-1 sm:grid-cols-4 gap-4 items-center">
+                      <div>
+                        <span className="text-zinc-500 text-xs font-semibold block uppercase">Pago Inicial Pactado</span>
+                        <span className="text-white font-bold text-lg">${totalPagoInicialAcordado.toLocaleString()}</span>
                       </div>
-                      <div className="flex items-center gap-4">
-                        <span className="text-white font-bold">${pago.importe.toLocaleString()}</span>
-                        {!pago.isInitial && (
-                          <>
-                            <button onClick={() => {
-                              setSelectedPago(pago);
-                              setEditPagoData({ medioPago: pago.medioPago, observaciones: pago.observaciones || "", file: null });
-                              setOpenEditPago(true);
-                            }} className="p-1.5 text-zinc-400 hover:text-white hover:bg-[#222] rounded transition-colors" title="Editar Pago">
-                              <Edit className="w-4 h-4" />
-                            </button>
-                            <button onClick={() => handleDownloadPagoReceipt(pago)} className="p-1.5 text-zinc-400 hover:text-blue-500 hover:bg-blue-500/10 rounded transition-colors" title="Descargar Comprobante">
-                              <FileText className="w-4 h-4" />
-                            </button>
-                            <button onClick={() => handleDeletePago(pago.id)} className="p-1.5 text-zinc-400 hover:text-red-500 hover:bg-red-500/10 rounded transition-colors" title="Eliminar Pago">
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </>
+                      <div>
+                        <span className="text-zinc-500 text-xs font-semibold block uppercase">Total Cobrado</span>
+                        <span className="text-green-400 font-bold text-lg">${totalPagoInicialCobrado.toLocaleString()}</span>
+                      </div>
+                      <div>
+                        <span className="text-zinc-500 text-xs font-semibold block uppercase">Pendiente</span>
+                        <span className={`${pagoInicialPendiente > 0 ? "text-red-400" : "text-zinc-400"} font-bold text-lg`}>
+                          ${pagoInicialPendiente.toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        {pagoInicialPendiente > 0 && (
+                          <Button 
+                            onClick={() => {
+                              setPagoData({ 
+                                importe: pagoInicialPendiente.toString(), 
+                                medioPago: "EFECTIVO", 
+                                observaciones: "Pago Inicial", 
+                                file: null 
+                              });
+                              setOpenPago(true);
+                            }}
+                            className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold text-xs px-3 py-1.5 h-auto rounded-md shadow"
+                          >
+                            <Plus className="w-3.5 h-3.5 mr-1" /> Cobrar Pendiente
+                          </Button>
                         )}
                       </div>
                     </div>
-                  ))}
+                  )}
+
+                  {allPagos.length === 0 ? (
+                    <div className="p-8 text-center text-zinc-500">No hay pagos iniciales ni entregas registradas.</div>
+                  ) : (
+                    <div className="divide-y divide-[#222]">
+                      {allPagos.map((pago: any) => (
+                        <div key={pago.id} className="p-4 flex items-center justify-between hover:bg-[#111] transition-colors">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center border border-green-500/20">
+                              <DollarSign className="w-5 h-5 text-green-500" />
+                            </div>
+                            <div>
+                              <p className="text-white font-medium">{pago.medioPago === "SENA" ? "SEÑA" : pago.medioPago}</p>
+                              <p className="text-zinc-500 text-xs">{new Date(pago.fecha).toLocaleDateString()} {pago.observaciones ? `• ${pago.observaciones}` : ""}</p>
+                              <div className="flex gap-2 mt-1">
+                                {pago.comprobanteUrl && (
+                                  <a href={pago.comprobanteUrl} target="_blank" rel="noreferrer" className="text-xs text-blue-400 hover:underline">Ver adjunto</a>
+                                )}
+                                <span className="text-xs text-yellow-500 font-mono">Nº {pago.comprobante || pago.id.slice(-6).toUpperCase()}</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <span className="text-white font-bold">${pago.importe.toLocaleString()}</span>
+                            {!pago.isInitial && (
+                              <>
+                                <button onClick={() => {
+                                  setSelectedPago(pago);
+                                  setEditPagoData({ medioPago: pago.medioPago, observaciones: pago.observaciones || "", file: null });
+                                  setOpenEditPago(true);
+                                }} className="p-1.5 text-zinc-400 hover:text-white hover:bg-[#222] rounded transition-colors" title="Editar Pago">
+                                  <Edit className="w-4 h-4" />
+                                </button>
+                                <button onClick={() => handleDownloadPagoReceipt(pago)} className="p-1.5 text-zinc-400 hover:text-blue-500 hover:bg-blue-500/10 rounded transition-colors" title="Descargar Comprobante">
+                                  <FileText className="w-4 h-4" />
+                                </button>
+                                <button onClick={() => handleDeletePago(pago.id)} className="p-1.5 text-zinc-400 hover:text-red-500 hover:bg-red-500/10 rounded transition-colors" title="Eliminar Pago">
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               );
             })()}

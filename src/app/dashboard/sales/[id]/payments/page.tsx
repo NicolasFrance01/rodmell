@@ -27,7 +27,7 @@ export default async function PaymentsPage({ params }: { params: Promise<{ id: s
   // Calculate totals
   const totalPagadoSuelto = sale.pagos.reduce((acc, p) => acc + p.importe, 0);
   const totalCuotasPagadas = sale.cuotas.filter(c => c.estado === "PAGADA").reduce((acc, c) => acc + c.valor, 0);
-  const totalRecaudado = (sale.efectivo || 0) + (sale.autoPartePago || 0) + totalPagadoSuelto + totalCuotasPagadas;
+  const totalRecaudado = (sale.autoPartePago || 0) + totalPagadoSuelto + totalCuotasPagadas;
 
   return (
     <PaymentClient 
