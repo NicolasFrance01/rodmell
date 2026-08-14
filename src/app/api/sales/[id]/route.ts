@@ -15,7 +15,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     const body = await req.json();
     const { id } = await params;
 
-    const { id: _, createdAt, updatedAt, cliente, vehiculo, ...updateData } = body;
+    const { id: _, createdAt, updatedAt, cliente, vehiculo, clienteId, vehiculoId, vendedorId, ...updateData } = body;
 
     // Convert strings to floats where necessary
     if (updateData.precioVehiculo !== undefined) updateData.precioVehiculo = parseFloat(updateData.precioVehiculo);
@@ -46,7 +46,12 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
     const sale = await prisma.operacion.update({
       where: { id },
-      data: updateData,
+      data: {
+        ...updateData,
+        ...(clienteId  && { cliente:  { connect: { id: clienteId  } } }),
+        ...(vehiculoId && { vehiculo: { connect: { id: vehiculoId } } }),
+        ...(vendedorId && { vendedor: { connect: { id: vendedorId } } }),
+      },
     });
 
     await prisma.activityLog.create({

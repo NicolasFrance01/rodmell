@@ -11,16 +11,20 @@ import {
   BadgeDollarSign,
   Settings,
   BarChart3,
+  CreditCard,
+  Wrench,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const allLinks = [
-  { name: "Dashboard",     href: "/dashboard",          icon: LayoutDashboard, roles: ["ADMIN", "MANAGER"] },
-  { name: "Vehículos",     href: "/dashboard/vehicles", icon: Car,             roles: ["SELLER", "ADMIN", "MANAGER"] },
-  { name: "Clientes",      href: "/dashboard/customers",icon: Users,           roles: ["SELLER", "ADMIN", "MANAGER"] },
-  { name: "Ventas",        href: "/dashboard/sales",    icon: BadgeDollarSign, roles: ["SELLER", "ADMIN", "MANAGER"] },
-  { name: "Reportes",      href: "/dashboard/reports",  icon: BarChart3,       roles: ["ADMIN", "MANAGER"] },
-  { name: "Configuración", href: "/dashboard/settings", icon: Settings,        roles: ["MANAGER"] },
+  { name: "Dashboard",        href: "/dashboard",           icon: LayoutDashboard, roles: ["ADMIN", "MANAGER"] },
+  { name: "Vehículos",        href: "/dashboard/vehicles",  icon: Car,             roles: ["SELLER", "ADMIN", "MANAGER"] },
+  { name: "Clientes",         href: "/dashboard/customers", icon: Users,           roles: ["SELLER", "ADMIN", "MANAGER"] },
+  { name: "Ventas",           href: "/dashboard/sales",     icon: BadgeDollarSign, roles: ["SELLER", "ADMIN", "MANAGER"] },
+  { name: "Créditos",         href: "/dashboard/credits",   icon: CreditCard,      roles: ["SELLER", "ADMIN", "MANAGER"] },
+  { name: "Servicios",        href: "/dashboard/services",  icon: Wrench,          roles: ["SELLER", "ADMIN", "MANAGER"] },
+  { name: "Reportes",         href: "/dashboard/reports",   icon: BarChart3,       roles: ["ADMIN", "MANAGER"] },
+  { name: "Configuración",    href: "/dashboard/settings",  icon: Settings,        roles: ["MANAGER"] },
 ];
 
 export function Sidebar() {

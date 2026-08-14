@@ -8,12 +8,14 @@ export const dynamic = 'force-dynamic';
 
 // Define which roles can access which routes
 const ROUTE_PERMISSIONS: Record<string, string[]> = {
-  "/dashboard":          ["ADMIN", "MANAGER"],
-  "/dashboard/vehicles": ["SELLER", "ADMIN", "MANAGER"],
-  "/dashboard/customers":["SELLER", "ADMIN", "MANAGER"],
-  "/dashboard/sales":    ["SELLER", "ADMIN", "MANAGER"],
-  "/dashboard/reports":  ["ADMIN", "MANAGER"],
-  "/dashboard/settings": ["MANAGER"],
+  "/dashboard":           ["ADMIN", "MANAGER"],
+  "/dashboard/vehicles":  ["SELLER", "ADMIN", "MANAGER"],
+  "/dashboard/customers": ["SELLER", "ADMIN", "MANAGER"],
+  "/dashboard/sales":     ["SELLER", "ADMIN", "MANAGER"],
+  "/dashboard/credits":   ["SELLER", "ADMIN", "MANAGER"],
+  "/dashboard/services":  ["SELLER", "ADMIN", "MANAGER"],
+  "/dashboard/reports":   ["ADMIN", "MANAGER"],
+  "/dashboard/settings":  ["MANAGER"],
 };
 
 function getFirstAllowedRoute(role: string): string {

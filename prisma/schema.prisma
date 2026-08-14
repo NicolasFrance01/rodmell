@@ -63,6 +63,15 @@ enum Ubicacion {
   SUCURSAL_J_IBARRA
 }
 
+enum TipoServicio {
+  ACCESORIO
+  POLARIZADO
+  GNC
+  ALARMA
+  SERVICE
+  OTROS
+}
+
 model User {
   id            String      @id @default(cuid())
   name          String
@@ -91,8 +100,10 @@ model Cliente {
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
 
-  operaciones    Operacion[]
-  documentos     Documento[]
+  operaciones         Operacion[]
+  documentos          Documento[]
+  creditosHistoricos  CreditoHistorico[]
+  servicios           Servicio[]
 }
 
 model Vehiculo {
@@ -159,6 +170,7 @@ model Operacion {
   cuotas            Cuota[]
   gastos            Gasto[]
   documentos        Documento[]
+  servicios         Servicio[]
 }
 
 model Pago {
@@ -222,4 +234,55 @@ model ActivityLog {
   createdAt DateTime @default(now())
 
   user      User     @relation(fields: [userId], references: [id])
+}
+
+// ─── Créditos Históricos ───────────────────────────────────────────────────
+
+model CreditoHistorico {
+  id              String           @id @default(cuid())
+  clienteId       String
+  descripcion     String           // Ej: "Toyota Corolla 2019" o descripción libre
+  totalFinanciado Float
+  cantidadCuotas  Int
+  valorCuota      Float
+  intereses       Float?           @default(0)
+  fechaInicio     DateTime
+  observaciones   String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  cliente         Cliente          @relation(fields: [clienteId], references: [id])
+  cuotas          CuotaHistorica[]
+}
+
+model CuotaHistorica {
+  id               String           @id @default(cuid())
+  creditoId        String
+  numeroCuota      Int
+  valor            Float
+  fechaVencimiento DateTime
+  estado           EstadoCuota      @default(PENDIENTE)
+  fechaPago        DateTime?
+  montoPagado      Float?
+
+  credito          CreditoHistorico @relation(fields: [creditoId], references: [id])
+}
+
+// ─── Servicios & Agregados ────────────────────────────────────────────────
+
+model Servicio {
+  id            String       @id @default(cuid())
+  clienteId     String
+  operacionId   String?
+  tipo          TipoServicio
+  descripcion   String
+  monto         Float
+  pagado        Boolean      @default(false)
+  fecha         DateTime     @default(now())
+  observaciones String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  cliente       Cliente      @relation(fields: [clienteId], references: [id])
+  operacion     Operacion?   @relation(fields: [operacionId], references: [id])
 }
